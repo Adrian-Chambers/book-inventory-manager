@@ -4,7 +4,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Typography, Button, Box, TextField } from '@mui/material';
 import './App.css';
-import BookCard from './components/BookCard';
+import BookList from './components/BookList';
+import { loadBooks, saveBooks } from './utils/storage';
+import { fetchBookData, fetchAuthorData, fetchCoverData } from './utils/api';
+import { isValidISBN } from './utils/validation';
+import ISBNForm from './components/ISBNForm';
 
 function App() {
   const [isbn, setIsbn] = useState('');
@@ -13,32 +17,17 @@ function App() {
 
   // Load books from local storage
   useEffect(() => {
-    const savedBooks = localStorage.getItem('books')
-    if(savedBooks){
-      setBooks(JSON.parse(savedBooks))
-    }
+    setBooks(loadBooks())
   }, [])
 
-  // Save books
-  const saveBooks = (newBooks) => {
-    setBooks(newBooks)
-    localStorage.setItem('books', JSON.stringify(newBooks))
-  }
-
-  // Check if ISBN is valid. Must be 10 or 13 numbers.
-  const isValidISBN = (isbn) => {
-    const cleanIsbn = isbn.replace(/-/g, '');
-    if (cleanIsbn.length === 10) {
-      return /^\d{9}[\dX]$/.test(cleanIsbn);
-    } else if (cleanIsbn.length === 13) {
-      return /^\d{13}$/.test(cleanIsbn);
-    }
-    return false;
-  };
-
-  // When "add book" button is clicked.
+  // When "add book" button is clicked
   const addBook = async () => {
-    // ISBN field empty
+    // Placeholder values for book title, name, cover.
+    let bookTitle = "Unknown";
+    let authorName = "Unknown";
+    let bookCover = "";
+
+    // Check if ISBN field is empty
     if(!isbn){ 
       toast.error("Please enter an ISBN.")
       return;
@@ -60,54 +49,40 @@ function App() {
     // Change "add book" button to an unclickable button that says "fetching..."
     setFetching(true);
 
+    // Attempt to get book information using ISBN
     try{
-
-      // Attempt to get book information using ISBN
-      const bookRes = await fetch(`https://openlibrary.org/isbn/${isbn}.json`);
-      const bookData = await bookRes.json();
+      const bookData = await fetchBookData(isbn);
 
       // Cannot find book information
-      if(!bookData || bookData.error === "notfound"){ 
+      if(bookData.error === "notfound"){ 
         console.error("Cannot find book data.")
-        toast.error("Cannot find book information.")
+        toast.error("Cannot find book.")
         return;
       }
 
-      let authorKey;
-      let authorData = [];
+      // Set book title
+      bookTitle = bookData.title || "Unknown";
 
-      // Cannot find book authors
-      if(!bookData.authors){
-        console.error("Cannot find author data.")
-        authorData.name = "Unknown"
+      // Attempt to get author information using author key
+      const authorKey = bookData.authors?.[0]?.key || bookData.authors?.[0]?.author?.key;
+      
+      try{
+        const authorData = authorKey ? await fetchAuthorData(authorKey) : { name: "Unknown" };
+        authorName = authorData.name || "Unknown";
       }
-      // Can find book authors
-      else{
-        if (bookData.authors[0]?.author?.key) {
-          authorKey = bookData.authors[0].author.key;
-        } else if (bookData.authors[0]?.key) {
-          authorKey = bookData.authors[0].key;
-        } 
-
-        try {
-          // Attempt to retrieve author information using author key
-          const authorRes = await fetch(`https://openlibrary.org${authorKey}.json`)
-          authorData = await authorRes.json();
-        } catch(error){
-          console.error("Error fetching author data: ", error.message);
+      catch(error){
+        console.error("Error fetching author data: ", error.message);
           toast.error("Error fetching author data. Author information may be incomplete.")
-          authorData.name = "Unknown";
-        }
       }
 
-      // Get book title. If there is none, set to "Unknown".
-      const bookTitle = bookData.title ? bookData.title : "Unknown";
-
-      // Get author name. If there is none, set to "Unknown".
-      const authorName = authorData.name ? authorData.name : "Unknown";
-
-      // Get book cover link. If there is none, set link to empty string.
-      const bookCover = bookData.covers ? `https://covers.openlibrary.org/b/id/${bookData.covers[0]}-L.jpg` : "";
+      // Attempt to get book cover using isbn
+      try {
+        const coverData = await fetchCoverData(isbn)
+        bookCover = coverData.source_url || "";
+      } catch (error) {
+        console.error("Error fetching book cover: ", error.message);
+        toast.error("Error fetching book cover. Information may be incomplete.")
+      } 
       
       // Create book object
       const book = {
@@ -118,20 +93,14 @@ function App() {
         rating: 0
       }
 
-      // Set books
-      const newBooks = [...books, book]
-      saveBooks(newBooks)
+      // Add new book to list
+      saveBooks([...books, book]);
+      setBooks([...books, book]);
       toast.success("Book added.")
 
     } catch (error) {
       console.error("Error adding book: ", error.message)
-      if(error instanceof TypeError && error.message === "Failed to fetch"){
-        toast.error("Network error. Please check your internet connection.")
-      }
-      else{
-        toast.error("Error adding book. Please try again.")
-      }
-      
+      toast.error("Error adding book. Please try again.")
     } finally {
       setFetching(false);
     }
@@ -152,14 +121,24 @@ function App() {
 
     const newBooks = books.filter((book, i) => i !== index);
     saveBooks(newBooks)
-    toast.success("Book removed.")
+    setBooks(newBooks);
+    toast.success("Book removed")
   }
 
+  // Update the rating of a book
   const updateRating = (index, newValue) => {
+    // Display error message if index is out of bounds
+    if(index < 0 || index >= books.length){
+      toast.error("Error updating rating");
+      console.log("Error updating rating.");
+      return;
+    }
+
     const newBooks = [...books];
     newBooks[index].rating = newValue;
-    saveBooks(newBooks)
-    toast.success("Updated book rating.")
+    saveBooks(newBooks);
+    setBooks(newBooks);
+    toast.success("Updated book rating.");
   }
 
   return (
@@ -183,24 +162,13 @@ function App() {
       >
         <Typography component="div" variant="h3">Book Inventory Manager</Typography>
         
-        <TextField variant="outlined" label="ISBN" value={isbn} onChange={ (event) => setIsbn(event.target.value)}>ISBN</TextField>
+        <ISBNForm isbn={isbn} setIsbn={setIsbn} fetching={fetching} addBook={addBook} />
 
-        {fetching ? 
-          (<Button variant="contained" disabled>Fetching...</Button>)
-          : (<Button variant="contained" onClick={addBook}>Add Book</Button>
-        )}
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4}}>
-          {books.map((book, index) => (
-            <BookCard 
-              key={book.id}
-              book={book}
-              index={index}
-              removeBook={removeBook}
-              updateRating={updateRating}
-            />
-          ))}
-        </Box>
+        <BookList 
+          books={books} 
+          removeBook={removeBook} 
+          updateRating={updateRating}
+        />
       </Box>
     </Box>
   </>
