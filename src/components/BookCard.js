@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, CardMedia, CardContent, Typography, Button, Box, Rating } from '@mui/material';
 
-const BookCard = ({ book, index, removeBook, updateRating }) => {
+const BookCard = ({ book, removeBook, updateRating }) => {
   return (
-    <Card key={book.id} sx={{ display: 'flex', mb: 2}}>
+    <Card sx={{ display: 'flex', mb: 2}}>
             
             <CardMedia component="img" sx={{ width: 151 }} image={book.cover} alt={book.title} />
             
@@ -22,12 +22,12 @@ const BookCard = ({ book, index, removeBook, updateRating }) => {
                   ISBN: {book.isbn}
                 </Typography>
 
-                <Rating value={book.rating} onChange={(event, newValue) => updateRating(index, newValue)} />
+                <Rating value={book.rating} onChange={(event, newValue) => updateRating(newValue)} />
 
               </CardContent>
 
               <Box sx={{ display: 'flex', p: 2 }}>
-                <Button variant="contained" color="error" onClick={() => removeBook(index)}>Delete</Button>
+                <Button variant="contained" color="error" onClick={removeBook}>Delete</Button>
               </Box>
 
             </Box>

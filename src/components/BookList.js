@@ -9,9 +9,8 @@ function BookList({ books, removeBook, updateRating }) {
         <BookCard
           key={index}
           book={book}
-          index={index}
-          removeBook={removeBook}
-          updateRating={updateRating}
+          removeBook={() => removeBook(index)}
+          updateRating={(newValue) => updateRating(index, newValue)}
         />
       ))}
     </Box>
