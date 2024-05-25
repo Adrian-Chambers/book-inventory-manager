@@ -14,8 +14,9 @@ export const useFetchData = (isbn, books, setBooks, setFetching, setIsbn, toast)
         }
 
         // Check if ISBN is valid
-        if (!isValidISBN(isbn)) {
-            toast.error("Invalid ISBN. Please try again.");
+        const validationMessage = isValidISBN(isbn);
+        if (validationMessage !== true) {
+            toast.error(validationMessage);
             return;
         }
 
