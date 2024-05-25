@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Typography, Card, CardMedia, CardContent, Button, Box, TextField, Rating } from '@mui/material';
+import { Typography, Button, Box, TextField } from '@mui/material';
 import './App.css';
+import BookCard from './components/BookCard';
 
 function App() {
   const [isbn, setIsbn] = useState('');
@@ -18,10 +19,11 @@ function App() {
     }
   }, [])
 
-  // Save books to local storage
-  const saveToLocalStorage = (books) => {
-    localStorage.setItem('books', JSON.stringify(books));
-  };
+  // Save books
+  const saveBooks = (newBooks) => {
+    setBooks(newBooks)
+    localStorage.setItem('books', JSON.stringify(newBooks))
+  }
 
   // Check if ISBN is valid. Must be 10 or 13 numbers.
   const isValidISBN = (isbn) => {
@@ -44,7 +46,14 @@ function App() {
 
     // Check if ISBN is valid
     if(!isValidISBN(isbn)){
-      toast.error("Please enter a valid ISBN.")
+      toast.error("Invalid ISBN. Please try again.")
+      return;
+    }
+
+    // Check if book with same ISBN is already in list
+    const existingBook = books.find((book) => book.isbn === isbn);
+    if (existingBook) {
+      toast.error("This book is already in your inventory.");
       return;
     }
 
@@ -79,14 +88,16 @@ function App() {
         } else if (bookData.authors[0]?.key) {
           authorKey = bookData.authors[0].key;
         } 
-        else {  // Cannot find author key
-          console.error("Author key not found in book data.");
-          authorData.name = "Unknown"
-        }
 
-        // Attempt to retrieve author information using author key
-        const authorRes = await fetch(`https://openlibrary.org${authorKey}.json`)
-        authorData = await authorRes.json();
+        try {
+          // Attempt to retrieve author information using author key
+          const authorRes = await fetch(`https://openlibrary.org${authorKey}.json`)
+          authorData = await authorRes.json();
+        } catch(error){
+          console.error("Error fetching author data: ", error.message);
+          toast.error("Error fetching author data. Author information may be incomplete.")
+          authorData.name = "Unknown";
+        }
       }
 
       // Get book title. If there is none, set to "Unknown".
@@ -109,13 +120,18 @@ function App() {
 
       // Set books
       const newBooks = [...books, book]
-      setBooks(newBooks)
-      saveToLocalStorage(newBooks)
+      saveBooks(newBooks)
       toast.success("Book added.")
 
     } catch (error) {
       console.error("Error adding book: ", error.message)
-      toast.error("Error adding book.")
+      if(error instanceof TypeError && error.message === "Failed to fetch"){
+        toast.error("Network error. Please check your internet connection.")
+      }
+      else{
+        toast.error("Error adding book. Please try again.")
+      }
+      
     } finally {
       setFetching(false);
     }
@@ -125,18 +141,24 @@ function App() {
 
   }
 
+  // Remove a book from the list
   const removeBook = (index) => {
+    // Display error message if index is out of bounds
+    if(index < 0 || index >= books.length){
+      toast.error("Error removing book");
+      console.log("Error removing book.");
+      return;
+    }
+
     const newBooks = books.filter((book, i) => i !== index);
-    setBooks(newBooks);
-    saveToLocalStorage(newBooks)
+    saveBooks(newBooks)
     toast.success("Book removed.")
   }
 
   const updateRating = (index, newValue) => {
     const newBooks = [...books];
     newBooks[index].rating = newValue;
-    setBooks(newBooks);
-    saveToLocalStorage(newBooks)
+    saveBooks(newBooks)
     toast.success("Updated book rating.")
   }
 
@@ -161,63 +183,22 @@ function App() {
       >
         <Typography component="div" variant="h3">Book Inventory Manager</Typography>
         
-        <TextField 
-          variant="outlined"
-          label="ISBN"
-          value={isbn}
-          onChange={ (event) => setIsbn(event.target.value)}
-        >ISBN</TextField>
+        <TextField variant="outlined" label="ISBN" value={isbn} onChange={ (event) => setIsbn(event.target.value)}>ISBN</TextField>
 
         {fetching ? 
-          (
-            <Button 
-              variant="contained"
-            >Fetching...</Button>
-          ) : (
-            <Button 
-              variant="contained"
-              onClick={addBook}
-              
-            >Add Book</Button>
+          (<Button variant="contained" disabled>Fetching...</Button>)
+          : (<Button variant="contained" onClick={addBook}>Add Book</Button>
         )}
 
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4}}>
           {books.map((book, index) => (
-            <Card key={book.id} sx={{ display: 'flex', mb: 2}}>
-            <CardMedia
-              component="img"
-              sx={{ width: 151 }}
-              image={book.cover}
-              alt={book.title}
+            <BookCard 
+              key={book.id}
+              book={book}
+              index={index}
+              removeBook={removeBook}
+              updateRating={updateRating}
             />
-            <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <CardContent>
-
-                <Typography component="div" variant="h6">
-                  {book.title}
-                </Typography>
-
-                <Typography variant="subtitle1" color="text.secondary" component="div">
-                  Author: {book.author}
-                </Typography>
-
-                <Typography variant="subtitle1" color="text.secondary" component="div">
-                  ISBN: {book.isbn}
-                </Typography>
-
-                <Rating
-                  value={book.rating}
-                  onChange={(event, newValue) => updateRating(index, newValue)}
-                />
-
-              </CardContent>
-
-              <Box sx={{ display: 'flex', p: 2 }}>
-                <Button variant="contained" color="error" onClick={() => removeBook(index)}>Delete</Button>
-              </Box>
-
-            </Box>
-          </Card>
           ))}
         </Box>
       </Box>
