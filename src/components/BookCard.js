@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardMedia, CardContent, Typography, Button, Box, Rating } from '@mui/material';
+import { bookCardPropTypes } from '../propTypes';
 
 const BookCard = ({ book, removeBook, updateRating }) => {
   return (
@@ -34,5 +35,7 @@ const BookCard = ({ book, removeBook, updateRating }) => {
           </Card>
   );
 };
+
+BookCard.propTypes = bookCardPropTypes;
 
 export default BookCard;
