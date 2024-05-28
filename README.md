@@ -36,7 +36,6 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 - **View inventory**: Display a list of the books in your inventory with details such as the title, author, ISBN, and cover image.
 - **Rate books**: Rate each book on a scale of 1 to 5 stars.
 - **Delete books**: Remove books from your inventory by clicking the "delete" button next to a book.
-- **Persisting data**: Data is saved in the browser's local storage using [IndexedDB](https://www.npmjs.com/package/idb) to ensure persistence across page refreshes.
 
 ## Project Structure
 
