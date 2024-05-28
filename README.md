@@ -1,70 +1,55 @@
-# Getting Started with Create React App
+# Book Inventory Manager
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web-based application to organize and manage a book collection. This project allows users to add, view, rate, and delete books from their inventory, integrating with the [Open Library API](https://openlibrary.org/developers/api) for fetching book details.
 
-## Available Scripts
+## Demo
 
-In the project directory, you can run:
+You can view a demo of this project on [Vercel](https://book-inventory-manager-chi.vercel.app/).
 
-### `npm start`
+## Installation
 
-Runs the app in the development mode.\
+Make sure you have the following installed on your computer:
+- Node.js (>=14.0.0)
+- npm (>=6.0.0) or yarn (>=1.22.0)
+
+Clone the repository:
+```
+git clone https://github.com/Adrian-Chambers/book-inventory-manager.git
+cd book-inventory-manager
+```
+
+Install dependencies:
+```
+npm install
+```
+
+Run the application in development mode:
+```
+npm start
+```
+
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Features
 
-### `npm test`
+- **Add books**: Add new books by entering the ISBN in the search field. The app fetches book details including the title, author, and cover image from the [Open Library API](https://openlibrary.org/developers/api).
+- **View inventory**: Display a list of the books in your inventory with details such as the title, author, ISBN, and cover image.
+- **Rate books**: Rate each book on a scale of 1 to 5 stars.
+- **Delete books**: Remove books from your inventory by clicking the "delete" button next to a book.
+- **Persisting data**: Data is saved in the browser's local storage using [IndexedDB](https://www.npmjs.com/package/idb) to ensure persistence across page refreshes.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Project Structure
 
-### `npm run build`
+- `src/App.js`: Main component that sets up the layout and contains the core logic for fetching and displaying books.
+- `src/components/`: Contains the reusable components used throughout the app.
+- `src/hooks/useFetchData.js`: Custom hook to manage book data fetching and state.
+- `src/utils`: Contains utility functions for API requests, database operations, and validation.
+- `src/propTypes.js`: PropTypes definitions for type-checking.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Technology Used
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [Create React App](https://create-react-app.dev/)
+- [Open Library API](https://openlibrary.org/developers/api)
+- [Material UI](https://mui.com/material-ui/)
+- [React Toastify](https://www.npmjs.com/package/react-toastify)
+- [IndexedDB](https://www.npmjs.com/package/idb)
