@@ -53,3 +53,4 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 - [Material UI](https://mui.com/material-ui/)
 - [React Toastify](https://www.npmjs.com/package/react-toastify)
 - [IndexedDB](https://www.npmjs.com/package/idb)
+- [Yup](https://www.npmjs.com/package/yup)
